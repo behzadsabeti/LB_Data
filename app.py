@@ -17,38 +17,38 @@ df['themes'] = df['themes'].fillna('')
 df['genres'] = df['genres'].apply(lambda x: x.split(',') if x else [])
 df['themes'] = df['themes'].apply(lambda x: x.split(',') if x else [])
 
-# Parse histogram into a list of ratings
-df['histogram'] = df['histogram'].apply(lambda x: ast.literal_eval(x) if pd.notnull(x) else [])
+# # Parse histogram into a list of ratings
+# df['histogram'] = df['histogram'].apply(lambda x: ast.literal_eval(x) if pd.notnull(x) else [])
 
-# Add a decade column
-df['decade'] = (df['year'] // 10) * 10
+# # Add a decade column
+# df['decade'] = (df['year'] // 10) * 10
 
-# Expand histogram data into individual ratings
-def expand_histogram(histogram):
-    ratings = []
-    for rating, count in enumerate(histogram, start=1):
-        ratings.extend([rating] * count)
-    return ratings
+# # Expand histogram data into individual ratings
+# def expand_histogram(histogram):
+#     ratings = []
+#     for rating, count in enumerate(histogram, start=1):
+#         ratings.extend([rating] * count)
+#     return ratings
 
-# Add expanded ratings as a new column
-df['expanded_ratings'] = df['histogram'].apply(expand_histogram)
+# # Add expanded ratings as a new column
+# df['expanded_ratings'] = df['histogram'].apply(expand_histogram)
 
-# Create a new DataFrame with individual ratings and genres
-df_exploded_genres = df.explode('genres')[['genres', 'histogram']]
-df_exploded_directors = df.explode('director')[['director', 'histogram']]
-df_exploded_decade = df[['decade', 'histogram']]
+# # Create a new DataFrame with individual ratings and genres
+# df_exploded_genres = df.explode('genres')[['genres', 'histogram']]
+# df_exploded_directors = df.explode('director')[['director', 'histogram']]
+# df_exploded_decade = df[['decade', 'histogram']]
 
-# Function to calculate average histogram
-def calculate_average_histogram(df_grouped):
-    histogram_sum = df_grouped['histogram'].apply(lambda x: np.sum(np.array(x.tolist()), axis=0))
-    histogram_count = df_grouped['histogram'].count()
-    return histogram_sum / histogram_count
+# # Function to calculate average histogram
+# def calculate_average_histogram(df_grouped):
+#     histogram_sum = df_grouped['histogram'].apply(lambda x: np.sum(np.array(x.tolist()), axis=0))
+#     histogram_count = df_grouped['histogram'].count()
+#     return histogram_sum / histogram_count
 
 # Sidebar options
 st.sidebar.title("Movie Data Analysis")
 option = st.sidebar.selectbox(
     'Select Analysis Type',
-    ['Genre Distribution', 'Theme Analysis', 'Director Analysis', 'Yearly Trends', 'Average Histogram by']
+    ['Genre Distribution', 'Theme Analysis', 'Director Analysis', 'Yearly Trends']
 )
 
 # Function to extract unique values and their counts
@@ -98,47 +98,47 @@ elif option == 'Yearly Trends':
     ax.set_ylabel("Number of Movies")
     st.pyplot(fig)
 
-# Average Histogram by selected group
-elif option == 'Average Histogram by':
-    st.sidebar.subheader("Group Average Histogram by")
-    group_by_options = st.sidebar.radio(
-        '',
-        ['Genres', 'Decades', 'Directors (Top 10)']
-    )
+# # Average Histogram by selected group
+# elif option == 'Average Histogram by':
+#     st.sidebar.subheader("Group Average Histogram by")
+#     group_by_options = st.sidebar.radio(
+#         '',
+#         ['Genres', 'Decades', 'Directors (Top 10)']
+#     )
 
-    st.header("Average Histogram by Group")
+#     st.header("Average Histogram by Group")
     
-    if group_by_options == 'Genres':
-        grouped_df = df.explode('genres').groupby('genres')
-    elif group_by_options == 'Decades':
-        grouped_df = df.groupby('decade')
-    elif group_by_options == 'Directors (Top 10)':
-        top_10_directors = df['director'].value_counts().head(10).index
-        grouped_df = df[df['director'].isin(top_10_directors)].groupby('director')
+#     if group_by_options == 'Genres':
+#         grouped_df = df.explode('genres').groupby('genres')
+#     elif group_by_options == 'Decades':
+#         grouped_df = df.groupby('decade')
+#     elif group_by_options == 'Directors (Top 10)':
+#         top_10_directors = df['director'].value_counts().head(10).index
+#         grouped_df = df[df['director'].isin(top_10_directors)].groupby('director')
 
-    average_histogram_by_group = calculate_average_histogram(grouped_df)
-    average_histogram_by_group = average_histogram_by_group.apply(pd.Series)
+#     average_histogram_by_group = calculate_average_histogram(grouped_df)
+#     average_histogram_by_group = average_histogram_by_group.apply(pd.Series)
 
-    num_plots = len(average_histogram_by_group)
-    num_cols = 4
-    num_rows = (num_plots + num_cols - 1) // num_cols
+#     num_plots = len(average_histogram_by_group)
+#     num_cols = 4
+#     num_rows = (num_plots + num_cols - 1) // num_cols
 
-    fig, axs = plt.subplots(num_rows, num_cols, figsize=(16, num_rows * 4))
-    if num_rows == 1:
-        axs = [axs]
-    for i, (group, hist) in enumerate(average_histogram_by_group.iterrows()):
-        row = i // num_cols
-        col = i % num_cols
-        axs[row][col].bar(range(1, 11), hist)
-        axs[row][col].set_title(f"{group}")
-        axs[row][col].set_xlabel("Rating")
-        axs[row][col].set_ylabel("Average Count")
+#     fig, axs = plt.subplots(num_rows, num_cols, figsize=(16, num_rows * 4))
+#     if num_rows == 1:
+#         axs = [axs]
+#     for i, (group, hist) in enumerate(average_histogram_by_group.iterrows()):
+#         row = i // num_cols
+#         col = i % num_cols
+#         axs[row][col].bar(range(1, 11), hist)
+#         axs[row][col].set_title(f"{group}")
+#         axs[row][col].set_xlabel("Rating")
+#         axs[row][col].set_ylabel("Average Count")
 
-    # Hide any unused subplots
-    for i in range(num_plots, num_rows * num_cols):
-        row = i // num_cols
-        col = i % num_cols
-        axs[row][col].axis('off')
+#     # Hide any unused subplots
+#     for i in range(num_plots, num_rows * num_cols):
+#         row = i // num_cols
+#         col = i % num_cols
+#         axs[row][col].axis('off')
 
-    plt.tight_layout()
-    st.pyplot(fig)
+#     plt.tight_layout()
+#     st.pyplot(fig)
